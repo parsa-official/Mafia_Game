@@ -1,0 +1,31 @@
+{
+    "mafia": [
+        {"id": 1, "side": "mafia", "character_name": "گادفادر (رییس مافیا)"},
+        {"id": 2, "side": "mafia", "character_name": "دکتر لکتر"},
+        {"id": 3, "side": "mafia", "character_name": "ناتو"},
+        {"id": 7, "side": "mafia", "character_name": "معشوقه"},
+        {"id": 8, "side": "mafia", "character_name": "سایلنسر"}
+    ],
+    "city": [
+        {"id": 45, "side": "city", "character_name": "کاراگاه"},
+        {"id": 46, "side": "city", "character_name": "جان سخت"},
+        {"id": 47, "side": "city", "character_name": "پزشک"},
+        {"id": 48, "side": "city", "character_name": "روانشناس"},
+        {"id": 49, "side": "city", "character_name": "شهردار"},
+        {"id": 50, "side": "city", "character_name": "نگهبان"},
+        {"id": 51, "side": "city", "character_name": "تفنگدار"},
+        {"id": 56, "side": "city", "character_name": "گورکن"},
+        {"id": 58, "side": "city", "character_name": "فدایی"},
+        {"id": 59, "side": "city", "character_name": "کلانتر"},
+        {"id": 65, "side": "city", "character_name": "جادوگر"},
+        {"id": 66, "side": "city", "character_name": "ساقی"},
+        {"id": 67, "side": "city", "character_name": "اسنایپر"},
+        {"id": 78, "side": "city", "character_name": "کابوی"},
+        {"id": 79, "side": "city", "character_name": "کشیش"}
+    ],
+    "unknown": [
+        {"id": 119, "side": "unknown", "character_name": "کیلر"},
+        {"id": 120, "side": "unknown", "character_name": "گرگینه"},
+        {"id": 121, "side": "unknown", "character_name": "سندیکا"}
+    ]
+}
