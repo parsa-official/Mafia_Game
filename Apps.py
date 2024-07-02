@@ -4,7 +4,6 @@ import subprocess
 import os
 import signal
 
-
 def start_bot():
     if "bot_process" not in st.session_state:
         st.session_state.bot_process = subprocess.Popen(["python", "telegram_bot.py"])
@@ -44,11 +43,11 @@ def run():
 
     if st.button("Start Telegram Bot"):
         start_bot()
-        st.rerun()
+        st.experimental_rerun()
 
     if st.button("Stop Telegram Bot"):
         stop_bot()
-        st.rerun()
+        st.experimental_rerun()
 
     if "bot_started" in st.session_state:
         if st.session_state.bot_started:
