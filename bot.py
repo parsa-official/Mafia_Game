@@ -15,7 +15,7 @@ app = Client(name="GOD_Mafia",
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the absolute path to the JSON file
-json_file_path = os.path.join(script_dir, "db/characters2.json")
+json_file_path = os.path.join(script_dir, "db/characters.json")
 
 # Load characters from JSON file
 with open(json_file_path, "r", encoding="utf-8") as file:
@@ -45,10 +45,11 @@ commands_list = [
     ("/start", "Start the bot"),
     ("/select_members", "Select members for the game"),
     ("/select_characters", "Select characters for the members"),
-    ("/shuffle", "Shuffle characters adn Show the list to admin"),
+    ("/shuffle", "Shuffle characters and show the list to admin"),
     ("/send_characters", "Send the selected characters to members"),
-    # Add more commands as needed
+    ("/reset", "Reset the bot (admin only)")
 ]
+
 
 # Define the function to display the commands
 @app.on_message(filters.command(["start", "commands"]) & filters.group)
@@ -61,9 +62,19 @@ def start(client, message):
     message.reply_text(help_text)
 
 
-# @app.on_message(filters.command("start"))
-# def start(client, message):
-#     message.reply_text("Hello! Add me to a group and use /select to select members.")
+def reset():
+    global selected_members, user_characters, user_character_selections
+    selected_members = defaultdict(dict)
+    user_characters = defaultdict(dict)
+    user_character_selections = defaultdict(dict)
+    # Any other reset logic can go here
+
+# Command handler for /reset
+@app.on_message(filters.command("reset") & filters.group)
+@admin_only
+def reset_command(client, message):
+    reset()
+    message.reply_text("Bot data has been reset.")
 
 @app.on_message(filters.command("select_members") & filters.group)
 @admin_only
@@ -158,6 +169,11 @@ def save_selected_members(client, selected_members, chat_id, user_id):
 
 
 ####################################################################################################
+characters_mafia = data["mafia"]
+characters_city = data["city"]
+characters_unknown = data["unknown"]
+
+
 @app.on_message(filters.command("select_characters") & filters.group)
 @admin_only
 def select_characters(client, message):
@@ -169,29 +185,62 @@ def select_characters(client, message):
         selected_characters_count = len(user_character_selections[chat_id].get(user_id, []))
 
         buttons = [
-            [
-                InlineKeyboardButton(
-                    f"{'✅ ' if c['character_name'] in [uc['character_name'] for uc in user_character_selections[chat_id].get(user_id, [])] else ''}"
-                    f"{c['character_name']}",
-                    callback_data=f"select_character_{i}"
-                )
-            ]
-            for i, c in enumerate(characters)
+            [InlineKeyboardButton("Mafia", callback_data="select_group_mafia")],
+            [InlineKeyboardButton("City", callback_data="select_group_city")],
+            [InlineKeyboardButton("Unknown", callback_data="select_group_unknown")],
         ]
         reply_markup = InlineKeyboardMarkup(buttons)
         message.reply_text(
-            f"Select characters >> \n👥 selected --members--: **{selected_members_count}** \n🃏 selected --characters--: **{selected_characters_count}**",
+            f"Select character group >> \n👥 selected --members--: **{selected_members_count}** \n🃏 selected --characters--: **{selected_characters_count}**",
             reply_markup=reply_markup
         )
     else:
         message.reply_text("You haven't selected any members yet.")
 
-@app.on_callback_query(filters.regex(r"^select_character_"))
-def on_select_character(client, callback_query: CallbackQuery):
+@app.on_callback_query(filters.regex(r"^select_group_"))
+def on_select_group(client, callback_query: CallbackQuery):
+    group = callback_query.data.split("_")[2]
     chat_id = callback_query.message.chat.id
     user_id = callback_query.from_user.id
-    selected_char_index = int(callback_query.data.split("_")[2])
-    character = characters[selected_char_index]
+
+    if group == "mafia":
+        character_list = characters_mafia
+    elif group == "city":
+        character_list = characters_city
+    else:
+        character_list = characters_unknown
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                f"{'✅ ' if c['character_name'] in [uc['character_name'] for uc in user_character_selections[chat_id].get(user_id, [])] else ''}"
+                f"{c['character_name']}",
+                callback_data=f"select_character_{group}_{i}"
+            )
+        ]
+        for i, c in enumerate(character_list)
+    ]
+    reply_markup = InlineKeyboardMarkup(buttons)
+    callback_query.message.edit_text(
+        f"Select characters from {group} >>",
+        reply_markup=reply_markup
+    )
+
+@app.on_callback_query(filters.regex(r"^select_character_"))
+def on_select_character(client, callback_query: CallbackQuery):
+    data = callback_query.data.split("_")
+    group = data[2]
+    selected_char_index = int(data[3])
+
+    if group == "mafia":
+        character = characters_mafia[selected_char_index]
+    elif group == "city":
+        character = characters_city[selected_char_index]
+    else:
+        character = characters_unknown[selected_char_index]
+
+    chat_id = callback_query.message.chat.id
+    user_id = callback_query.from_user.id
 
     # Initialize the user's selected characters list if it doesn't exist for this chat
     if user_id not in user_character_selections[chat_id]:
@@ -206,9 +255,16 @@ def on_select_character(client, callback_query: CallbackQuery):
         callback_query.answer(f"Selected: {character['character_name']}")
 
     # Update the character selection message
-    update_character_selection_message(client, callback_query.message, user_id, chat_id)
+    update_character_selection_message(client, callback_query.message, user_id, chat_id, group)
 
-def update_character_selection_message(client, message, user_id, chat_id):
+def update_character_selection_message(client, message, user_id, chat_id, group):
+    if group == "mafia":
+        character_list = characters_mafia
+    elif group == "city":
+        character_list = characters_city
+    else:
+        character_list = characters_unknown
+
     selected_members_count = len(selected_members[chat_id].get(user_id, []))
     selected_characters_count = len(user_character_selections[chat_id].get(user_id, []))
 
@@ -217,17 +273,19 @@ def update_character_selection_message(client, message, user_id, chat_id):
             InlineKeyboardButton(
                 f"{'✅ ' if c in user_character_selections[chat_id].get(user_id, []) else ''}"
                 f"{c['character_name']}",
-                callback_data=f"select_character_{i}"
+                callback_data=f"select_character_{group}_{i}"
             )
         ]
-        for i, c in enumerate(characters)
+        for i, c in enumerate(character_list)
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
     message.edit_text(
-        f"Select characters >> \n👥 selected --members--: **{selected_members_count}** \n🃏 selected --characters--: **{selected_characters_count}**",
+        f"Select characters from {group} >> \n👥 selected --members--: **{selected_members_count}** \n🃏 selected --characters--: **{selected_characters_count}**",
         reply_markup=reply_markup
     )
-    
+
+
+###########################################################################
 @app.on_message(filters.command("shuffle") & filters.group)
 @admin_only
 def show_characters(client, message):
@@ -260,13 +318,13 @@ def show_characters(client, message):
             else:
                 unknown_players.append(f"🔶 {user_info}")
 
-        message_text = "🔴 Mafia Players:\n" + "\n".join(mafia_players) + "\n\n" + \
-                       "🔵 City Players:\n" + "\n".join(city_players) + "\n\n" + \
-                       "🟡 Unknown Players:\n" + "\n".join(unknown_players)
+        # message_text = "🔴 Mafia Players:\n" + "\n".join(mafia_players) + "\n\n" + \
+        #                "🔵 City Players:\n" + "\n".join(city_players) + "\n\n" + \
+        #                "🟡 Unknown Players:\n" + "\n".join(unknown_players)
         
-        # message_text = "🔴 Mafia Players:\n" + "||" + "\n".join(mafia_players) + "||" + "\n\n" + \
-        #                "🔵 City Players:\n" + "||" + "\n".join(city_players) + "||" + "\n\n" + \
-        #                "🟡 Unknown Players:\n" + "||" + "\n".join(unknown_players) + "||" 
+        message_text = "🔴 Mafia Players:\n" + "||" + "\n".join(mafia_players) + "||" + "\n\n" + \
+                       "🔵 City Players:\n" + "||" + "\n".join(city_players) + "||" + "\n\n" + \
+                       "🟡 Unknown Players:\n" + "||" + "\n".join(unknown_players) + "||" 
 
 
         client.send_message(chat_id=user_id, text=f"Selected members and their characters:\n {message_text}")
@@ -305,7 +363,17 @@ def send_characters_to_selected(client, message):
         user_info_data.append(user_info)
 
         try:
-            client.send_message(chat_id=user.id, text=f"|| Your character is: {char_name}\nSide: {char_side.capitalize()} ||")
+            # Mapping char_side to Persian equivalent
+            if char_side.lower() == 'city':
+                char_side_persian = "شهروند"
+            elif char_side.lower() == 'mafia':
+                char_side_persian = "مافیا"
+            else:
+                char_side_persian = "مستقل"
+
+            # Sending the message to the user
+            client.send_message(chat_id=user.id, text=f"لطفاً از نشان دادن نقش خود به دیگران و باز کردن پیام در دید بقیه بازیکن‌ها خودداری کنید.\n\nنقش شما در این بازی:\n\n|| **{char_name}** ||\n\nساید شما در این بازی:\n\n|| **{char_side_persian}** || \n")
+
         except Exception as e:
             failed_users.append(user.username or f"{user.first_name} {user.last_name or ''}")
             print(f"Failed to send message to {user.id}: {str(e)}")
@@ -319,5 +387,6 @@ def send_characters_to_selected(client, message):
         message.reply_text(f"Message sent to all selected members except: {failed_list}")
     else:
         message.reply_text("Message sent to all selected members.")
+
 
 app.run()
