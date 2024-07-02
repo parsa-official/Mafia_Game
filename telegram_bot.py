@@ -320,4 +320,5 @@ def send_characters_to_selected(client, message):
     else:
         message.reply_text("Message sent to all selected members.")
 
-app.run()
+if __name__ == "__main__":
+    app.run()
