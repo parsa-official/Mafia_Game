@@ -1,11 +1,11 @@
 import os
 import json
 import random
+from functools import wraps
+from collections import defaultdict
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pyrogram.enums import ChatMemberStatus
-from functools import wraps
-from collections import defaultdict
 
 app = Client(name="GOD_Mafia",
              api_id=27689690,
@@ -320,5 +320,4 @@ def send_characters_to_selected(client, message):
     else:
         message.reply_text("Message sent to all selected members.")
 
-if __name__ == "__main__":
-    app.run()
+app.run()
