@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import google.generativeai as genai
 from functools import wraps
 from collections import defaultdict
 from pyrogram import Client, filters
