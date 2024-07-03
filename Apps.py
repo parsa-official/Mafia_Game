@@ -1,60 +1,56 @@
 import streamlit as st
-from streamlit.logger import get_logger
+import json
+import subprocess
+import os
+import signal
 
-LOGGER = get_logger(__name__)
+st.title("Telegram Bot Control")
 
-def run():
-    st.set_page_config(
-        page_title="English with Parsa",
-        page_icon="📚",
-    )
+# Function to start the Telegram bot
+def start_bot():
+    if "bot_process" not in st.session_state:
+        st.session_state.bot_process = subprocess.Popen(["python3", "bot.py"])
+        st.session_state.bot_started = True
+        st.write("Telegram bot started.")
 
-    st.title("Welcome to English with Parsa! 👋")
+# Function to stop the Telegram bot
+def stop_bot():
+    if "bot_process" in st.session_state:
+        os.kill(st.session_state.bot_process.pid, signal.SIGTERM)
+        st.session_state.bot_process = None
+        st.session_state.bot_started = False
+        st.write("Telegram bot stopped.")
+        # Delete the JSON file if it exists
+        if os.path.exists('user_info.json'):
+            os.remove('user_info.json')
+            st.write("user_info.json file deleted.")
 
-    st.sidebar.success("Select a app from the sidebar.")
+# Buttons to start and stop the bot
+if st.button("Start Telegram Bot"):
+    start_bot()
+    st.rerun()
 
-    st.write(
-        """
-        Whether you're looking to improve your grammar or enhance your vocabulary,
-        you've come to the right place! Choose from the options in the sidebar to
-        explore the exciting learning opportunities.
+if st.button("Stop Telegram Bot"):
+    stop_bot()
+    st.rerun()
 
-        ## 📕 Grammar Checker 📝
-        Enhance your writing skills with our Grammar Checker app. It helps you
-        identify and correct grammatical errors, making your writing more polished.
+# Confirmation messages
+if "bot_started" in st.session_state:
+    if st.session_state.bot_started:
+        st.success("Telegram bot is currently running.")
+    else:
+        st.success("Telegram bot is currently stopped.")
 
-        ## 📘 Vocabulary Quiz 🤓
-        Challenge yourself with our Vocabulary Quiz app. Test your knowledge of
-        words and expand your English vocabulary in an engaging and interactive way.
+st.title("Display Members Info")
 
-        ## 📗 Soon ...
+try:
+    with open('user_info.json', 'r') as f:
+        user_info_data = json.load(f)
+except FileNotFoundError:
+    user_info_data = []
 
-        ### Why Choose English with Parsa?
-        - Tailored learning experiences
-        - User-friendly apps
-        - Improve language skills at your own pace
-
-        ### Get Started
-        Select a app from the sidebar to begin your English learning journey!
-        
-        ### Resources
-        - Check out our [documentation](https://docs.englishwithparsa.com)
-        - Find the source code on [GitHub](https://github.com/parsa-official/grammar-checker-by-parsa)
-          (Grammar Checker by Parsa)
-
-        ### AI Technology
-        We utilize Google Gemini AI to power our language learning applications.
-        Experience the cutting-edge advancements in AI-driven education.
-
-
-        ### Stay Connected
-        Follow me on:
-        - [Instagram](https://www.instagram.com/pkhoshvaghti)
-        - [GitHub](https://github.com/parsa-official)
-        - [Telegram](https://t.me/official_parsa)
-        - [LinkedIn](https://www.linkedin.com/in/pkhoshvaghti/)
-        """
-    )
-
-if __name__ == "__main__":
-    run()
+if user_info_data:
+    for info in user_info_data:
+        st.write(info)
+else:
+    st.write("No user information available yet.")
