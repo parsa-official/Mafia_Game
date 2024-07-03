@@ -3,6 +3,7 @@ import json
 import subprocess
 import os
 import signal
+import google.generativeai as genai
 
 st.title("Telegram Bot Control")
 
