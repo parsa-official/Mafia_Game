@@ -6,13 +6,19 @@ from collections import defaultdict
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pyrogram.enums import ChatMemberStatus
-
-app = Client(name="GOD_Mafia",
-             api_id=27689690,
-             api_hash="893842f3f7e2fe003d8fc73d47045cbf",
-             bot_token="7288761682:AAE_XDugs5OKYGV1JA4vFi1qmJdpMAH5I90")
+from pathlib import Path
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
+workdir = Path(script_dir) / "session_files"
+workdir.mkdir(parents=True, exist_ok=True)
+
+app = Client(
+    name="GOD_Mafia",
+    api_id=27689690,
+    api_hash="893842f3f7e2fe003d8fc73d47045cbf",
+    bot_token="7288761682:AAE_XDugs5OKYGV1JA4vFi1qmJdpMAH5I90",
+    workdir=workdir  # Specify the work directory
+)
 
 # Construct the absolute path to the JSON file
 json_file_path = os.path.join(script_dir, "db/characters.json")
