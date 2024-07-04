@@ -1,0 +1,35 @@
+# # Ignore config files
+# config.json
+
+# Ignore compiled Python files
+*.pyc
+__pycache__/
+
+# Ignore environment-specific files
+.env
+db/backup.json
+db/characters_2.json
+# Ignore virtual environment folders
+venv/
+env/
+session_files/
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore log files
+*.log
+
+# Ignore generated files
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore IDE and editor files
+.idea/
+.vscode/
+
+# Ignore pycache
+__pycache__/
+
+# Ignore local development files
+*.sqlite3

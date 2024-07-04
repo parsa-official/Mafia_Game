@@ -10,14 +10,20 @@ from pyrogram.errors.exceptions import MessageNotModified
 from pyrogram.enums import ChatMemberStatus
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-workdir = Path(script_dir) / "session_files"
+config_path = Path(script_dir) / "config.json"
+
+# Load the configuration from the config file
+with open(config_path, 'r') as config_file:
+    config = json.load(config_file)
+
+workdir = Path(script_dir) / config["workdir"]
 workdir.mkdir(parents=True, exist_ok=True)
 
 app = Client(
     name="GOD_Mafia",
-    api_id=27689690,
-    api_hash="893842f3f7e2fe003d8fc73d47045cbf",
-    bot_token="7288761682:AAE_XDugs5OKYGV1JA4vFi1qmJdpMAH5I90",
+    api_id=config["api_id"],
+    api_hash=config["api_hash"],
+    bot_token=config["bot_token"],
     workdir=workdir  # Specify the work directory
 )
 
@@ -140,10 +146,6 @@ def on_select_member(client, callback_query):
     # Update the message with the current selection status
     update_member_selection_message(client, callback_query.message, user_id, chat_id)
 
-# @app.on_callback_query(filters.regex(r"^done_selecting_members"))
-# def done_selecting_members(client, callback_query):
-#     callback_query.message.delete()
-
 @app.on_callback_query(filters.regex(r"^done_selecting_members"))
 def done_selecting_members(client, callback_query):
     callback_query.message.delete()
@@ -179,7 +181,7 @@ def update_member_selection_message(client, message, user_id, chat_id):
     ]
 
     # Add '----done----' button to the end
-    done_button = InlineKeyboardButton("----done----", callback_data="done_selecting_members")
+    done_button = InlineKeyboardButton("----☑️ done ☑️----", callback_data="done_selecting_members")
     buttons.append([done_button])
 
     selected_count = len(selected_members.get(chat_id, {}).get(user_id, []))
@@ -257,7 +259,7 @@ def on_select_group(client, callback_query: CallbackQuery):
     ]
 
     # Add 'back' button to return to select_characters
-    back_button = InlineKeyboardButton("Back", callback_data="back_to_select_characters")
+    back_button = InlineKeyboardButton("Back 🔙", callback_data="back_to_select_characters")
     buttons.append([back_button])
 
     reply_markup = InlineKeyboardMarkup(buttons)
