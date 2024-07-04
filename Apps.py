@@ -9,7 +9,7 @@ st.title("Telegram Bot Control")
 # Function to start the Telegram bot
 def start_bot():
     if "bot_process" not in st.session_state:
-        st.session_state.bot_process = subprocess.Popen(["python", "telegram_bot.py"])
+        st.session_state.bot_process = subprocess.Popen(["python", "bot_v2.py"])
         st.session_state.bot_started = True
         st.write("Telegram bot started.")
 
