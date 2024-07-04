@@ -1,12 +1,13 @@
 import os
 import json
 import random
+from pathlib import Path
 from functools import wraps
 from collections import defaultdict
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from pyrogram.errors.exceptions import MessageNotModified
 from pyrogram.enums import ChatMemberStatus
-from pathlib import Path
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 workdir = Path(script_dir) / "session_files"
@@ -48,11 +49,11 @@ def admin_only(func):
     return wrapper
 
 commands_list = [
-    ("/start", "Start the bot"),
-    ("/select_members", "Select members for the game"),
-    ("/select_characters", "Select characters for the members"),
-    ("/shuffle", "Shuffle characters and show the list to admin"),
-    ("/send_characters", "Send the selected characters to members"),
+    ("/start", "Start the bot \n"),
+    ("/select_members", "Select members for the game \n"),
+    ("/select_characters", "Select characters for the members \n"),
+    ("/shuffle", "Shuffle characters and show the list to admin \n"),
+    ("/send_characters", "Send the selected characters to members \n\n"),
     ("/reset", "Reset the bot (admin only)")
 ]
 
@@ -81,6 +82,7 @@ def reset():
 def reset_command(client, message):
     reset()
     message.reply_text("Bot data has been reset.")
+#####################################################################################
 
 @app.on_message(filters.command("select_members") & filters.group)
 @admin_only
@@ -97,18 +99,23 @@ def select_members(client, message):
     buttons = [
         [
             InlineKeyboardButton(
-                f"{'✅ ' if m.user.id in selected_members.get(user_id, []) else ''}{m.user.first_name} {m.user.last_name or ''} ({m.user.username or 'N/A'})",
+                f"{'✅ ' if m.user.id in selected_members.get(chat_id, {}).get(user_id, []) else ''}"
+                f"{m.user.first_name} {m.user.last_name or ''} ({m.user.username or 'N/A'})",
                 callback_data=f"select_member_{m.user.id}"
             )
         ]
         for m in sorted_members
     ]
+
+    # Add '----done----' button to the end
+    done_button = InlineKeyboardButton("----☑️ done ☑️----", callback_data="done_selecting_members")
+    buttons.append([done_button])
+
     reply_markup = InlineKeyboardMarkup(buttons)
     message.reply_text("Select members:", reply_markup=reply_markup)
 
-    
 @app.on_callback_query(filters.regex(r"^select_member_"))
-def on_select_member(client, callback_query: CallbackQuery):
+def on_select_member(client, callback_query):
     chat_id = callback_query.message.chat.id
     user_id = callback_query.from_user.id
     selected_user_id = int(callback_query.data.split("_")[2])
@@ -133,8 +140,23 @@ def on_select_member(client, callback_query: CallbackQuery):
     # Update the message with the current selection status
     update_member_selection_message(client, callback_query.message, user_id, chat_id)
 
-    save_selected_members(client, selected_members, chat_id, user_id)
+# @app.on_callback_query(filters.regex(r"^done_selecting_members"))
+# def done_selecting_members(client, callback_query):
+#     callback_query.message.delete()
 
+@app.on_callback_query(filters.regex(r"^done_selecting_members"))
+def done_selecting_members(client, callback_query):
+    callback_query.message.delete()
+
+    # Send a new message with the count of selected members
+    chat_id = callback_query.message.chat.id
+    user_id = callback_query.from_user.id
+    selected_count = len(selected_members.get(chat_id, {}).get(user_id, []))
+
+    client.send_message(
+        chat_id=chat_id,
+        text=f"👥 Selected --members-- >>> **{selected_count}** \n\n Edit --Members--: /select_members \n Choose --Characters--: /select_characters",
+    )
 def update_member_selection_message(client, message, user_id, chat_id):
     chat_id = message.chat.id
     members = client.get_chat_members(chat_id)
@@ -156,11 +178,18 @@ def update_member_selection_message(client, message, user_id, chat_id):
         for m in sorted_members
     ]
 
+    # Add '----done----' button to the end
+    done_button = InlineKeyboardButton("----done----", callback_data="done_selecting_members")
+    buttons.append([done_button])
+
     selected_count = len(selected_members.get(chat_id, {}).get(user_id, []))
     reply_markup = InlineKeyboardMarkup(buttons)
     
     # Edit the original message with updated selection status
-    message.edit_text(f"Select members >> \n👥 selected: {selected_count}", reply_markup=reply_markup)
+    try:
+        message.edit_text(f"Select members >> \n👥 selected: {selected_count}", reply_markup=reply_markup)
+    except MessageNotModified:
+        pass 
 
 def save_selected_members(client, selected_members, chat_id, user_id):
     user_info_data = []
@@ -226,6 +255,11 @@ def on_select_group(client, callback_query: CallbackQuery):
         ]
         for i, c in enumerate(character_list)
     ]
+
+    # Add 'back' button to return to select_characters
+    back_button = InlineKeyboardButton("Back", callback_data="back_to_select_characters")
+    buttons.append([back_button])
+
     reply_markup = InlineKeyboardMarkup(buttons)
     callback_query.message.edit_text(
         f"Select characters from {group} >>",
@@ -284,11 +318,38 @@ def update_character_selection_message(client, message, user_id, chat_id, group)
         ]
         for i, c in enumerate(character_list)
     ]
+
+    # Add 'back' button to return to select_characters
+    back_button = InlineKeyboardButton("Back 🔙", callback_data="back_to_select_characters")
+    buttons.append([back_button])
+
     reply_markup = InlineKeyboardMarkup(buttons)
     message.edit_text(
         f"Select characters from {group} >> \n👥 selected --members--: **{selected_members_count}** \n🃏 selected --characters--: **{selected_characters_count}**",
         reply_markup=reply_markup
     )
+
+@app.on_callback_query(filters.regex(r"^back_to_select_characters"))
+def back_to_select_characters(client, callback_query: CallbackQuery):
+    chat_id = callback_query.message.chat.id
+    user_id = callback_query.from_user.id
+
+    if user_id in selected_members[chat_id] and selected_members[chat_id][user_id]:
+        selected_members_count = len(selected_members[chat_id][user_id])
+        selected_characters_count = len(user_character_selections[chat_id].get(user_id, []))
+
+        buttons = [
+            [InlineKeyboardButton("Mafia", callback_data="select_group_mafia")],
+            [InlineKeyboardButton("City", callback_data="select_group_city")],
+            [InlineKeyboardButton("Unknown", callback_data="select_group_unknown")],
+        ]
+        reply_markup = InlineKeyboardMarkup(buttons)
+        callback_query.message.edit_text(
+            f"Select character group >> \n👥 selected --members--: **{selected_members_count}** \n🃏 selected --characters--: **{selected_characters_count}**",
+            reply_markup=reply_markup
+        )
+    else:
+        callback_query.message.edit_text("You haven't selected any members yet.")
 
 
 ###########################################################################
@@ -307,16 +368,21 @@ def show_characters(client, message):
         city_players = []
         unknown_players = []
 
-        random.shuffle(user_character_selections[chat_id][user_id])  # Shuffle the selected characters
+        # Sort user_character_selections by character ID
+        sorted_character_selections = sorted(user_character_selections[chat_id][user_id], key=lambda c: c['id'])
 
         for i, user in enumerate(selected_members[chat_id][user_id]):
             if isinstance(user, int):
                 user = client.get_users(user)  # Fetch the user object if it's an integer
-            character = user_character_selections[chat_id][user_id][i]
+            character = sorted_character_selections[i]
+            character_id = character['id']
             character_name = character['character_name']
             character_side = character.get('side', 'unknown')
 
-            user_info = f"{user.first_name} {user.last_name or ''} ({user.username or 'N/A'}) - {character_name}"
+            # Truncate the username if it exceeds 10 characters
+            truncated_username = user.username[:10] + '...' if user.username and len(user.username) > 8 else (user.username or 'N/A')
+
+            user_info = f"{user.first_name} {user.last_name or ''} ({truncated_username}) - --**{character_name}**--"
             if character_side.lower() == 'mafia':
                 mafia_players.append(f"🔻 {user_info}")
             elif character_side.lower() == 'city':
@@ -324,22 +390,16 @@ def show_characters(client, message):
             else:
                 unknown_players.append(f"🔶 {user_info}")
 
-        # message_text = "🔴 Mafia Players:\n" + "\n".join(mafia_players) + "\n\n" + \
-        #                "🔵 City Players:\n" + "\n".join(city_players) + "\n\n" + \
-        #                "🟡 Unknown Players:\n" + "\n".join(unknown_players)
-        
         message_text = "🔴 Mafia Players:\n" + "||" + "\n".join(mafia_players) + "||" + "\n\n" + \
                        "🔵 City Players:\n" + "||" + "\n".join(city_players) + "||" + "\n\n" + \
-                       "🟡 Unknown Players:\n" + "||" + "\n".join(unknown_players) + "||" 
-
+                       "🟡 Unknown Players:\n" + "||" + "\n".join(unknown_players) + "||"
 
         client.send_message(chat_id=user_id, text=f"Selected members and their characters:\n {message_text}")
         message.reply_text("The list of selected characters has been sent to you in a private message.")
     else:
         message.reply_text("You haven't selected any members yet.")
 
-import json
-
+###########################################################################
 @app.on_message(filters.command("send_characters") & filters.group)
 @admin_only
 def send_characters_to_selected(client, message):
