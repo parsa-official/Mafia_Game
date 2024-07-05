@@ -38,6 +38,8 @@ with open(json_file_path, "r", encoding="utf-8") as file:
 selected_members = defaultdict(dict)
 user_characters = defaultdict(dict)
 user_character_selections = defaultdict(dict)
+shuffled_characters = defaultdict(dict)
+
 
 def is_admin(client, chat_id, user_id):
     member = client.get_chat_member(chat_id, user_id)
@@ -366,17 +368,23 @@ def show_characters(client, message):
             message.reply_text("You need to select exactly the same number of characters as the number of selected members.")
             return
 
+        # Shuffle the user_character_selections before using them
+        shuffled_character_selections = user_character_selections[chat_id][user_id][:]
+        random.shuffle(shuffled_character_selections)
+
+        # Store the shuffled characters
+        shuffled_characters[chat_id][user_id] = shuffled_character_selections
+
         mafia_players = []
         city_players = []
         unknown_players = []
 
-        # Sort user_character_selections by character ID
-        sorted_character_selections = sorted(user_character_selections[chat_id][user_id], key=lambda c: c['id'])
+        user_character_pairs = []
 
         for i, user in enumerate(selected_members[chat_id][user_id]):
             if isinstance(user, int):
                 user = client.get_users(user)  # Fetch the user object if it's an integer
-            character = sorted_character_selections[i]
+            character = shuffled_character_selections[i]
             character_id = character['id']
             character_name = character['character_name']
             character_side = character.get('side', 'unknown')
@@ -385,6 +393,12 @@ def show_characters(client, message):
             truncated_username = user.username[:10] + '...' if user.username and len(user.username) > 8 else (user.username or 'N/A')
 
             user_info = f"{user.first_name} {user.last_name or ''} ({truncated_username}) - --**{character_name}**--"
+            user_character_pairs.append((character_id, character_side, user_info))
+
+        # Sort the user_character_pairs by character_id
+        user_character_pairs.sort(key=lambda x: x[0])
+
+        for character_id, character_side, user_info in user_character_pairs:
             if character_side.lower() == 'mafia':
                 mafia_players.append(f"🔻 {user_info}")
             elif character_side.lower() == 'city':
@@ -401,6 +415,7 @@ def show_characters(client, message):
     else:
         message.reply_text("You haven't selected any members yet.")
 
+
 ###########################################################################
 @app.on_message(filters.command("send_characters") & filters.group)
 @admin_only
@@ -416,13 +431,19 @@ def send_characters_to_selected(client, message):
         message.reply_text("You need to select exactly the same number of characters as the number of selected members.")
         return
 
+    if chat_id not in shuffled_characters or user_id not in shuffled_characters[chat_id]:
+        message.reply_text("You need to shuffle the characters first using /shuffle.")
+        return
+
+    shuffled_character_selections = shuffled_characters[chat_id][user_id]
+
     user_info_data = []  # List to store user information for display
 
     failed_users = []
     for i, user in enumerate(selected_members[chat_id][user_id]):
         if isinstance(user, int):
             user = client.get_users(user)  # Fetch the user object if it's an integer
-        character = user_character_selections[chat_id][user_id][i]
+        character = shuffled_character_selections[i]
         char_name = character['character_name']
         char_side = character.get('side', 'unknown')
 

@@ -3,43 +3,78 @@ import json
 import subprocess
 import os
 import signal
+import time
+from glob import glob
 
 st.title("Telegram Bot Control")
 
 # Function to start the Telegram bot
 def start_bot():
-    if "bot_process" not in st.session_state:
-        st.session_state.bot_process = subprocess.Popen(["python", "bot_v2.py"])
+    if "bot_process" not in st.session_state or st.session_state.bot_process.poll() is not None:
+        bot_process = subprocess.Popen(["python", "bot_v2.py"])
+        st.session_state.bot_process = bot_process
         st.session_state.bot_started = True
         st.write("Telegram bot started.")
+    else:
+        st.write("Telegram bot is already running.")
 
 # Function to stop the Telegram bot
 def stop_bot():
-    if "bot_process" in st.session_state:
-        os.kill(st.session_state.bot_process.pid, signal.SIGTERM)
-        st.session_state.bot_process = None
-        st.session_state.bot_started = False
-        st.write("Telegram bot stopped.")
-        # Delete the JSON file if it exists
-        if os.path.exists('user_info.json'):
-            os.remove('user_info.json')
-            st.write("user_info.json file deleted.")
+    if "bot_process" in st.session_state and st.session_state.bot_process.poll() is None:
+        try:
+            bot_process = st.session_state.bot_process
+            bot_pid = bot_process.pid
 
-# Buttons to start and stop the bot
-if st.button("Start Telegram Bot"):
-    start_bot()
-    st.rerun()
+            # Send SIGTERM to the bot process
+            os.kill(bot_pid, signal.SIGTERM)
+            st.write("Stopping Telegram bot...")
 
-if st.button("Stop Telegram Bot"):
-    stop_bot()
-    st.rerun()
+            # Wait for the process to terminate gracefully (up to 5 seconds)
+            timeout = 5  # seconds
+            start_time = time.time()
+            while time.time() - start_time <= timeout:
+                if bot_process.poll() is not None:
+                    break
+                time.sleep(0.1)
+            else:
+                st.write("Forcefully terminating bot process...")
+                os.kill(bot_pid, signal.SIGKILL)
 
-# Confirmation messages
-if "bot_started" in st.session_state:
-    if st.session_state.bot_started:
-        st.success("Telegram bot is currently running.")
+            # Remove session files
+            session_files = glob(f"/session_files/{bot_pid}*.session")
+            for file in session_files:
+                os.remove(file)
+                st.write(f"Deleted session file: {file}")
+
+            st.session_state.bot_process = None
+            st.session_state.bot_started = False
+            st.write("Telegram bot stopped.")
+            
+            # Delete the JSON file if it exists
+            if os.path.exists('user_info.json'):
+                os.remove('user_info.json')
+                st.write("user_info.json file deleted.")
+                
+        except Exception as e:
+            st.write(f"Error stopping bot: {e}")
     else:
-        st.success("Telegram bot is currently stopped.")
+        st.write("Telegram bot is not running.")
+
+# Toggle button to start/stop the bot
+bot_status = st.button("Turn Telegram Bot On/Off")
+
+# Handle bot status toggle
+if bot_status:
+    if "bot_started" in st.session_state and st.session_state.bot_started:
+        stop_bot()
+    else:
+        start_bot()
+
+# Display current bot status
+if "bot_started" in st.session_state and st.session_state.bot_started:
+    st.success("Telegram bot is currently running.")
+else:
+    st.info("Telegram bot is currently stopped.")
 
 st.title("Display Members Info")
 

@@ -1,6 +1,6 @@
 {
   "mafia": [
-    {"id": 1, "side": "mafia", "character_name": "گادفادر - رپیس مافیا", "description": ""},
+    {"id": 1, "side": "mafia", "character_name": "گادفادر - رییس مافیا", "description": ""},
     {"id": 2, "side": "mafia", "character_name": "شاه کش", "description": ""},
     {"id": 3, "side": "mafia", "character_name": "دکتر لکتر", "description": ""},
     {"id": 4, "side": "mafia", "character_name": "خرابکار", "description": ""},
@@ -26,10 +26,10 @@
   "city": [
     {"id": 23, "side": "city", "character_name": "کاراگاه", "description": ""},
     {"id": 24, "side": "city", "character_name": "پزشک", "description": ""},
-    {"id": 25, "side": "city", "character_name": "اسنایپر/تک تیرانداز", "description": ""},
+    {"id": 25, "side": "city", "character_name": "اسنایپر", "description": ""},
     {"id": 26, "side": "city", "character_name": "جان سخت", "description": ""},
     {"id": 27, "side": "city", "character_name": "ساقی", "description": ""},
-    {"id": 28, "side": "city", "character_name": "فدایی/کابوی", "description": ""},
+    {"id": 28, "side": "city", "character_name": "کابوی", "description": ""},
     {"id": 29, "side": "city", "character_name": "تفنگدار", "description": ""},
     {"id": 30, "side": "city", "character_name": "روان شناس", "description": ""},
     {"id": 31, "side": "city", "character_name": "بازپرس", "description": ""},
@@ -54,7 +54,7 @@
     {"id": 50, "side": "city", "character_name": "عطار", "description": ""},
     {"id": 51, "side": "city", "character_name": "آشپز", "description": ""},
     {"id": 52, "side": "city", "character_name": "دندان پزشک", "description": ""},
-    {"id": 53, "side": "city", "character_name": "کدنویس", "description": ""},
+    {"id": 53, "side": "city", "character_name": "فرشته نجات", "description": ""},
     {"id": 54, "side": "city", "character_name": "کلانتر", "description": ""},
     {"id": 55, "side": "city", "character_name": "گردن کلفت", "description": ""},
     {"id": 56, "side": "city", "character_name": "لوک خوش شانس", "description": ""},
