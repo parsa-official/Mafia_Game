@@ -11,7 +11,7 @@ st.title("Telegram Bot Control")
 # Function to start the Telegram bot
 def start_bot():
     if "bot_process" not in st.session_state or st.session_state.bot_process.poll() is not None:
-        bot_process = subprocess.Popen(["python", "bot_v2.py"])
+        bot_process = subprocess.Popen(["python", "bot_v3.py"])
         st.session_state.bot_process = bot_process
         st.session_state.bot_started = True
         st.write("Telegram bot started.")
