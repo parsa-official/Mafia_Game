@@ -414,14 +414,23 @@ def show_characters(client, message):
             else:
                 unknown_players.append(f"🔶 {user_info}")
 
+        # Select a random player to start the game
+        starting_player = random.choice(selected_members[chat_id][user_id])
+        if isinstance(starting_player, int):
+            starting_player = client.get_users(starting_player)
+
+        starting_player_info = f" --**{starting_player.first_name} {starting_player.last_name or ''}**-- ({starting_player.username or 'N/A'})"
+
         message_text = "🔴 Mafia Players:\n" + "||" + "\n".join(mafia_players) + "||" + "\n\n" + \
                        "🔵 City Players:\n" + "||" + "\n".join(city_players) + "||" + "\n\n" + \
-                       "🟡 Unknown Players:\n" + "||" + "\n".join(unknown_players) + "||"
+                       "🟡 Unknown Players:\n" + "||" + "\n".join(unknown_players) + "||" + "\n\n" + \
+                       f"🗣 Starting Player: {starting_player_info}"
 
-        client.send_message(chat_id=user_id, text=f"Selected members and their characters:\n {message_text}")
+        client.send_message(chat_id=user_id, text=f"Selected members and their characters:\n\n {message_text}")
         message.reply_text("The list of selected characters has been sent to you in a private message.")
     else:
         message.reply_text("You haven't selected any members yet.")
+
 
 
 ###########################################################################
