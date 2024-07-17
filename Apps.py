@@ -74,7 +74,7 @@ def stop_bot(bot_version):
 if "bot_v3_started" not in st.session_state:
     st.session_state.bot_v3_started = False
 
-bot_v3_status = st.button("Turn Telegram Bot v3 On/Off", disabled=st.session_state.get("bot_v4_started", False))
+bot_v3_status = st.button("Mafia-Classic", disabled=st.session_state.get("bot_v4_started", False))
 if bot_v3_status:
     if st.session_state.bot_v3_started:
         stop_bot("bot_v3")
@@ -85,7 +85,7 @@ if bot_v3_status:
 if "bot_v4_started" not in st.session_state:
     st.session_state.bot_v4_started = False
 
-bot_v4_status = st.button("Turn Telegram Bot v4 On/Off", disabled=st.session_state.get("bot_v3_started", False))
+bot_v4_status = st.button("Mafia-Night", disabled=st.session_state.get("bot_v3_started", False))
 if bot_v4_status:
     if st.session_state.bot_v4_started:
         stop_bot("bot_v4")
@@ -94,14 +94,14 @@ if bot_v4_status:
 
 # Display current bot status
 if st.session_state.bot_v3_started:
-    st.success("Telegram bot v3 is currently running.")
+    st.success("Telegram bot (Mafia-Classic) is currently running.")
 else:
-    st.info("Telegram bot v3 is currently stopped.")
+    st.info("Telegram bot (Mafia-Classic) is currently stopped.")
 
 if st.session_state.bot_v4_started:
-    st.success("Telegram bot v4 is currently running.")
+    st.success("Telegram bot (Mafia-Night) is currently running.")
 else:
-    st.info("Telegram bot v4 is currently stopped.")
+    st.info("Telegram bot (Mafia-Night) is currently stopped.")
 
 st.title("Display Members Info")
 
