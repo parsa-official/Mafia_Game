@@ -8,6 +8,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pyrogram.errors.exceptions import MessageNotModified
 from pyrogram.enums import ChatMemberStatus
+import secrets
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config_path = Path(script_dir) / "config.json"
@@ -378,7 +379,7 @@ def show_characters(client, message):
 
         # Shuffle the user_character_selections before using them
         shuffled_character_selections = user_character_selections[chat_id][user_id][:]
-        random.shuffle(shuffled_character_selections)
+        secrets.SystemRandom().shuffle(shuffled_character_selections)
 
         # Store the shuffled characters
         shuffled_characters[chat_id][user_id] = shuffled_character_selections
@@ -415,7 +416,7 @@ def show_characters(client, message):
                 unknown_players.append(f"🔶 {user_info}")
 
         # Select a random player to start the game
-        starting_player = random.choice(selected_members[chat_id][user_id])
+        starting_player = secrets.choice(selected_members[chat_id][user_id])
         if isinstance(starting_player, int):
             starting_player = client.get_users(starting_player)
 
@@ -432,7 +433,71 @@ def show_characters(client, message):
         message.reply_text("You haven't selected any members yet.")
 
 
+# @app.on_message(filters.command("shuffle") & filters.group)
+# @admin_only
+# def show_characters(client, message):
+#     chat_id = message.chat.id
+#     user_id = message.from_user.id
 
+#     if user_id in selected_members[chat_id] and isinstance(selected_members[chat_id][user_id], list):
+#         if len(selected_members[chat_id][user_id]) != len(user_character_selections[chat_id][user_id]):
+#             message.reply_text("You need to select exactly the same number of characters as the number of selected members.")
+#             return
+
+#         # Shuffle the user_character_selections before using them
+#         shuffled_character_selections = user_character_selections[chat_id][user_id][:]
+#         random.shuffle(shuffled_character_selections)
+
+#         # Store the shuffled characters
+#         shuffled_characters[chat_id][user_id] = shuffled_character_selections
+
+#         mafia_players = []
+#         city_players = []
+#         unknown_players = []
+
+#         user_character_pairs = []
+
+#         for i, user in enumerate(selected_members[chat_id][user_id]):
+#             if isinstance(user, int):
+#                 user = client.get_users(user)  # Fetch the user object if it's an integer
+#             character = shuffled_character_selections[i]
+#             character_id = character['id']
+#             character_name = character['character_name']
+#             character_side = character.get('side', 'unknown')
+
+#             # Truncate the username if it exceeds 10 characters
+#             truncated_username = user.username[:10] + '...' if user.username and len(user.username) > 8 else (user.username or 'N/A')
+
+#             user_info = f"{user.first_name} {user.last_name or ''} ({truncated_username}) - --**{character_name}**--"
+#             user_character_pairs.append((character_id, character_side, user_info))
+
+#         # Sort the user_character_pairs by character_id
+#         user_character_pairs.sort(key=lambda x: x[0])
+
+#         for character_id, character_side, user_info in user_character_pairs:
+#             if character_side.lower() == 'mafia':
+#                 mafia_players.append(f"🔻 {user_info}")
+#             elif character_side.lower() == 'city':
+#                 city_players.append(f"🔷 {user_info}")
+#             else:
+#                 unknown_players.append(f"🔶 {user_info}")
+
+#         # Select a random player to start the game
+#         starting_player = random.choice(selected_members[chat_id][user_id])
+#         if isinstance(starting_player, int):
+#             starting_player = client.get_users(starting_player)
+
+#         starting_player_info = f" --**{starting_player.first_name} {starting_player.last_name or ''}**-- ({starting_player.username or 'N/A'})"
+
+#         message_text = "🔴 Mafia Players:\n" + "||" + "\n".join(mafia_players) + "||" + "\n\n" + \
+#                        "🔵 City Players:\n" + "||" + "\n".join(city_players) + "||" + "\n\n" + \
+#                        "🟡 Unknown Players:\n" + "||" + "\n".join(unknown_players) + "||" + "\n\n" + \
+#                        f"🗣 Starting Player: {starting_player_info}"
+
+#         client.send_message(chat_id=user_id, text=f"Selected members and their characters:\n\n {message_text}")
+#         message.reply_text("The list of selected characters has been sent to you in a private message.")
+#     else:
+#         message.reply_text("You haven't selected any members yet.")
 ###########################################################################
 @app.on_message(filters.command("send_characters") & filters.group)
 @admin_only
