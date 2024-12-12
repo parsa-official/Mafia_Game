@@ -131,6 +131,14 @@
         {"id": 125, "side": "unknown", "character_name": "نوستراداموس"},
         {"id": 126, "side": "unknown", "character_name": "جیکسا"},
         {"id": 127, "side": "unknown", "character_name": "جک گنجشکه"},
-        {"id": 128, "side": "unknown", "character_name": "زودیاک"}
+        {"id": 128, "side": "unknown", "character_name": "زودیاک"},
+        {"id": 128, "side": "unknown", "character_name": "دالتون"},
+        {"id": 128, "side": "unknown", "character_name": "دباغ"},
+        {"id": 128, "side": "unknown", "character_name": "پریزاد"},
+        {"id": 128, "side": "unknown", "character_name": "جوکر"},
+        {"id": 128, "side": "unknown", "character_name": "قمارباز"},
+        {"id": 128, "side": "unknown", "character_name": "نفتی"}
+
+
     ]
 }
